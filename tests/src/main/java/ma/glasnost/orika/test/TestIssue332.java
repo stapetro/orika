@@ -18,8 +18,7 @@ public class TestIssue332 {
     public void testIssue332() {
         Map<String, String> fieldMap = new HashMap<>();
         fieldMap.put("request.id", "reqId");
-        fieldMap.put("request.params['cp']{}", "cp");
-
+        fieldMap.put("request.params['cp'][0]", "cp");
 
         ObjectA a = new ObjectA();
         Request request = new Request();
@@ -36,6 +35,7 @@ public class TestIssue332 {
             add("0.52");
             add("0.53");
         }});
+        request.setParams(params);
 
 
         MappingContext.Factory mcf = new MappingContext.Factory();
@@ -47,6 +47,7 @@ public class TestIssue332 {
         BoundMapperFacade<ObjectA, ObjectB> delegate = mapperFactory.getMapperFacade(ObjectA.class, ObjectB.class);
 
         ObjectB b = delegate.map(a);
+        System.out.println(b);
     }
 
     public static class ObjectA {
@@ -105,6 +106,14 @@ public class TestIssue332 {
 
         public void setCp(Double cp) {
             this.cp = cp;
+        }
+
+        @Override
+        public String toString() {
+            return "ObjectB{" +
+                    "reqId=" + reqId +
+                    ", cp=" + cp +
+                    '}';
         }
     }
 }
