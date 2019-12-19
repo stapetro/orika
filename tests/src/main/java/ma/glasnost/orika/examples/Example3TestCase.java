@@ -34,9 +34,6 @@ import java.util.Map;
  */
 public class Example3TestCase {
 
-    /**
-     * !
-     */
     @Test
     public void nestedElements() {
 
@@ -58,6 +55,64 @@ public class Example3TestCase {
         System.out.println(pDto);
 
         Assert.assertNotNull(pDto);
+    }
+
+    @Test
+    public void fixIssue() {
+
+        Map<String, String> fieldMap = new HashMap<>();
+        fieldMap.put("names{fullName}", "personalNames{key}");
+        fieldMap.put("names{}", "personalNames{value}");
+        MapperFactory mapperFactory = new DefaultMapperFactory.Builder().mapNulls(false).dumpStateOnException(false).build();
+        ClassMapBuilder<PersonDto, Person> classBuilder = mapperFactory.classMap(PersonDto.class, Person.class);
+        fieldMap.forEach((k, v) -> classBuilder.field(v, k));
+        classBuilder.register();
+
+        BoundMapperFacade<Person, PersonDto> delegate = mapperFactory.getMapperFacade(Person.class, PersonDto.class);
+
+        Person person = new Person();
+        Name n1 = new Name("raj", "kumar", "raj kumar");
+        Name n2 = new Name("senthil", "kumar", "senthil kumar");
+        person.setNames(Arrays.asList(n1, n2));
+        PersonDto pDto = delegate.map(person);
+
+        System.out.println(pDto);
+        Assert.assertNotNull(pDto);
+    }
+
+    @Test
+    public void nestedElementsBtoA() {
+
+        Map<String, String> fieldMap = new HashMap<>();
+        fieldMap.put("names{fullName}", "personalNames{key}");
+        fieldMap.put("names{}", "personalNames{value}");
+        MapperFactory mapperFactory = new DefaultMapperFactory.Builder().mapNulls(false).dumpStateOnException(false).build();
+        ClassMapBuilder<PersonDto, Person> classBuilder = mapperFactory.classMap(PersonDto.class, Person.class);
+        fieldMap.forEach((k, v) -> classBuilder.field(v, k));
+        classBuilder.register();
+
+        BoundMapperFacade<PersonDto, Person> delegate = mapperFactory.getMapperFacade(PersonDto.class, Person.class);
+
+        PersonDto pDto = new PersonDto();
+        Map<String, Name> names = new HashMap<>();
+        pDto.setPersonalNames(names);
+        Name n1 = new Name("raj", "kumar", "raj kumar");
+        Name n2 = new Name("senthil", "kumar", "senthil kumar");
+        names.put(n1.getFullName(), n1);
+        names.put(n2.getFullName(), n2);
+
+        Person pSrc = delegate.map(pDto);
+
+        System.out.println("----- src: " + pSrc);
+        Assert.assertNotNull(pSrc);
+
+        Person person = new Person();
+        person.setNames(Arrays.asList(n1, n2));
+
+        BoundMapperFacade<Person, PersonDto> delegate1 = mapperFactory.getMapperFacade(Person.class, PersonDto.class);
+        PersonDto dest = delegate1.map(person);
+        System.out.println("----- dest: " + dest);
+        Assert.assertNotNull(dest);
     }
 
     public static class Name {
@@ -99,6 +154,16 @@ public class Example3TestCase {
         public void setFullName(String fullName) {
             this.fullName = fullName;
         }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("Name{");
+            sb.append("first='").append(first).append('\'');
+            sb.append(", last='").append(last).append('\'');
+            sb.append(", fullName='").append(fullName).append('\'');
+            sb.append('}');
+            return sb.toString();
+        }
     }
 
     public static class Person {
@@ -113,10 +178,21 @@ public class Example3TestCase {
         public void setNames(List<Name> names) {
             this.names = names;
         }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("Person{");
+            sb.append("names=").append(names);
+            sb.append('}');
+            return sb.toString();
+        }
     }
 
     public static class PersonDto {
         private Map<String, Name> personalNames;
+
+        public PersonDto() {
+        }
 
         public Map<String, Name> getPersonalNames() {
             return personalNames;
